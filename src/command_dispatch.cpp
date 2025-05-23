@@ -11,6 +11,12 @@ void CommandDispatch::process(const char *cmd) {
     else if (strcmp(cmd, "StopBalancing")  == 0) { _lp.stop();  }
     else if (strcmp(cmd, "Tare") == 0)    { _ts.tare(); }
     else if (strcmp(cmd, "Untare") == 0)  { _ts.untare(); }
+    else if (strcmp(cmd,"StartWinchAttempt")==0) {
+        _wc.cmdFour();            // 拉线启动
+        gWinchActive = true;
+        gWinchBaseForceN = _ts.getLastForce();   // 记录基准
+        Serial.println("[WINCH] Attempt started");
+    }
     else { Serial.printf("[CMD] Unknown: %s\n", cmd); }
 }
 

@@ -1,9 +1,14 @@
 #include "tension_sensor.h"
+#include "wire_control.h"
+extern WireControl wireCtrl;
 
 const uint8_t TensionSensor::CMD_READ[8] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
 const uint8_t TensionSensor::CMD_WRITE_AVAILABLE[8] = {0x01, 0x06, 0x00, 0x17, 0x00, 0x01, 0xF8, 0x0E};
 const uint8_t TensionSensor::CMD_TARE_ON[8] = {0x01, 0x06, 0x00, 0x15, 0x00, 0x01, 0x59, 0xCE};
 const uint8_t TensionSensor::CMD_TARE_OFF[8] = {0x01, 0x06, 0x00, 0x15, 0x00, 0x02, 0x19, 0xCF};
+
+volatile bool gWinchActive = false;
+float gWinchBaseForceN = 0.0f;
 
 void TensionSensor::begin(HardwareSerial& port, int rxPin, int txPin, uint32_t baud) {
     _serial = &port;
@@ -68,11 +73,30 @@ bool TensionSensor::readForce(float& f) {
 void TensionSensor::loop() {
     float f;
     if (readForce(f)) {
-        if (abs(f) > _thresholdN) {
-            // TODO: 调用联动逻辑（如停止拉绳）
+        /* --- Winch-Stop 检测 --- */
+        if (gWinchActive) {
+            static const float THRESH_N = 1.0f;          // 张力阈值 (N)
+            static const float THRESH_SLOPE = 1.0f;      // N/s 变化率阈值
+
+            static uint32_t lastT = millis();
+            uint32_t nowT = millis();
+            float dt = (nowT - lastT) / 1000.0f;
+            float slope = fabs(f - gWinchBaseForceN) / dt;
+
+            if (f > THRESH_N || slope > THRESH_SLOPE) {
+                // extern WireControl wireCtrl;              // 声明引用
+                wireCtrl.cmdFour();                       // 再次 CMD_FOUR = 停止卷绳
+                gWinchActive = false;
+                wireCtrl.cmdTwo();                        // CMD_TWO = 松线
+                Serial.println("[WINCH] Auto-stop triggered");
+            }
+            lastT = nowT;
+            gWinchBaseForceN = f;                         // 更新参考
         }
     }
+    vTaskDelay(100 / portTICK_PERIOD_MS);                 // 原 10 Hz
 }
+
 
 void TensionSensor::tare() {
     float f;

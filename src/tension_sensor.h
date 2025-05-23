@@ -30,4 +30,7 @@ private:
     bool writeCmdWithAck(const uint8_t *cmd, size_t len);
 };
 
+extern volatile bool gWinchActive;
+extern float gWinchBaseForceN;
+
 #endif
