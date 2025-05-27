@@ -75,8 +75,8 @@ void TensionSensor::loop() {
     if (readForce(f)) {
         /* --- Winch-Stop 检测 --- */
         if (gWinchActive) {
-            static const float THRESH_N = 1.0f;          // 张力阈值 (N)
-            static const float THRESH_SLOPE = 1.0f;      // N/s 变化率阈值
+            static const float THRESH_N = 0.08f;          // 张力阈值 (N)
+            static const float THRESH_SLOPE = 0.05f;      // N/s 变化率阈值
 
             static uint32_t lastT = millis();
             uint32_t nowT = millis();
