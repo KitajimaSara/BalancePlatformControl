@@ -17,6 +17,12 @@ void CommandDispatch::process(const char *cmd) {
         gWinchBaseForceN = _ts.getLastForce();   // 记录基准
         Serial.println("[WINCH] Attempt started");
     }
+    else if (strcmp(cmd, "PassiveLanding")==0) {
+        _wc.cmdFour();            // 拉线启动
+        gLandingActive = true;
+        gWinchBaseForceN = _ts.getLastForce();   // 记录基准
+        Serial.println("[WINCH] Passive landing started");
+    }
     else { Serial.printf("[CMD] Unknown: %s\n", cmd); }
 }
 

@@ -8,6 +8,7 @@ const uint8_t TensionSensor::CMD_TARE_ON[8] = {0x01, 0x06, 0x00, 0x15, 0x00, 0x0
 const uint8_t TensionSensor::CMD_TARE_OFF[8] = {0x01, 0x06, 0x00, 0x15, 0x00, 0x02, 0x19, 0xCF};
 
 volatile bool gWinchActive = false;
+volatile bool gLandingActive = false;
 float gWinchBaseForceN = 0.0f;
 
 void TensionSensor::begin(HardwareSerial& port, int rxPin, int txPin, uint32_t baud) {
@@ -87,6 +88,25 @@ void TensionSensor::loop() {
                 // extern WireControl wireCtrl;              // 声明引用
                 wireCtrl.cmdFour();                       // 再次 CMD_FOUR = 停止卷绳
                 gWinchActive = false;
+                wireCtrl.cmdTwo();                        // CMD_TWO = 松线
+                Serial.println("[WINCH] Auto-stop triggered");
+            }
+            lastT = nowT;
+            gWinchBaseForceN = f;                         // 更新参考
+        }
+        /* --- Landing 检测 --- */
+        if (gLandingActive) {
+            static const float THRESH_N = 0.2f;          // 张力阈值 (N)
+            static const float THRESH_SLOPE = 1.0f;      // N/s 变化率阈值
+
+            static uint32_t lastT = millis();
+            uint32_t nowT = millis();
+            float dt = (nowT - lastT) / 1000.0f;
+            float slope = fabs(f - gWinchBaseForceN) / dt;
+
+            if (f > THRESH_N || slope > THRESH_SLOPE) {
+                wireCtrl.cmdFour();                       // 再次 CMD_FOUR = 停止卷绳
+                gLandingActive = false;
                 wireCtrl.cmdTwo();                        // CMD_TWO = 松线
                 Serial.println("[WINCH] Auto-stop triggered");
             }

@@ -31,6 +31,7 @@ private:
 };
 
 extern volatile bool gWinchActive;
+extern volatile bool gLandingActive;
 extern float gWinchBaseForceN;
 
 #endif
