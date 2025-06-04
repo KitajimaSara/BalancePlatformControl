@@ -13,6 +13,7 @@ struct CommandMessage {
 class BleComm {
 public:
     void begin(QueueHandle_t q);
+    void send(const char *msg);
 
 private:
     QueueHandle_t _queue;

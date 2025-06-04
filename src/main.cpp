@@ -22,7 +22,6 @@ BleComm ble;
 void TensionSensorTask(void* param) {
     (void)param;
     for (;;) {
-
         static uint32_t tsPrint = 0;
         if (millis() - tsPrint > 5000) {
             Serial.println("[TS] alive");
@@ -37,7 +36,6 @@ void TensionSensorTask(void* param) {
 void BalancingTask(void* param) {
     (void)param;
     for (;;) {
-
         static uint32_t blPrint = 0;
         if (millis() - blPrint > 5000) {
             Serial.println("[BL] alive");
@@ -52,11 +50,14 @@ void SerialCmdTask(void* param) {
     (void)param;
     CommandMessage msg;
     while (true) {
-
         static uint32_t scPrint = 0;
         if (millis() - scPrint > 5000) {
             Serial.println("[SC] alive");
             scPrint = millis();
+        }
+
+        if (Serial.available() && Serial.read() == 'p') {
+            ble.send("ping");
         }
 
         if (Serial.available()) {

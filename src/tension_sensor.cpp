@@ -1,6 +1,8 @@
 #include "tension_sensor.h"
 #include "wire_control.h"
+#include "ble_comm.h"
 extern WireControl wireCtrl;
+extern BleComm ble;
 
 const uint8_t TensionSensor::CMD_READ[8] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
 const uint8_t TensionSensor::CMD_WRITE_AVAILABLE[8] = {0x01, 0x06, 0x00, 0x17, 0x00, 0x01, 0xF8, 0x0E};
@@ -90,6 +92,7 @@ void TensionSensor::loop() {
                 gWinchActive = false;
                 wireCtrl.cmdTwo();                        // CMD_TWO = 松线
                 Serial.println("[WINCH] Auto-stop triggered");
+                ble.send("[WINCH] Auto-stop triggered");  // 发送 BLE 通知
             }
             lastT = nowT;
             gWinchBaseForceN = f;                         // 更新参考
@@ -108,7 +111,8 @@ void TensionSensor::loop() {
                 wireCtrl.cmdFour();                       // 再次 CMD_FOUR = 停止卷绳
                 gLandingActive = false;
                 wireCtrl.cmdTwo();                        // CMD_TWO = 松线
-                Serial.println("[WINCH] Auto-stop triggered");
+                Serial.println("[WINCH] Landing auto-stop triggered");
+                ble.send("[WINCH] Landing auto-stop triggered");  // 发送 BLE 通知
             }
             lastT = nowT;
             gWinchBaseForceN = f;                         // 更新参考
