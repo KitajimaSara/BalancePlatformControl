@@ -1,4 +1,8 @@
 #include "leveling_platform.h"
+#include "ble_comm.h"          // 为了发 BLE
+extern BleComm ble;
+
+volatile bool gAngleStreamEnabled = false;     // ★ 新增
 
 /* ====== 初始化 ====== */
 void LevelingPlatform::begin() {
@@ -64,6 +68,19 @@ void LevelingPlatform::loop() {
     }
     float pitch = _ypr[1];
     float roll = _ypr[2];
+
+    // ★★★ 新增：如果开启了角度流，就通过 BLE 发一行
+    if (gAngleStreamEnabled) {
+        float yaw, pitch, roll;
+        getYPR(yaw, pitch, roll);
+
+        char buf[96];
+        snprintf(buf, sizeof(buf),
+                 "YPR,%lu,%.3f,%.3f,%.3f",
+                 (unsigned long)millis(),
+                 yaw, pitch, roll);
+        ble.send(buf);
+    }
 
     // static uint32_t dbg = 0;
     // if (millis() - dbg > 1000 && _active) {
@@ -141,4 +158,10 @@ void LevelingPlatform::loop() {
 
     /* 4. 维持 50 Hz */
     vTaskDelay(20 / portTICK_PERIOD_MS);
+}
+
+void LevelingPlatform::getYPR(float &yaw, float &pitch, float &roll) const {
+    yaw   = _ypr[0];
+    pitch = _ypr[1];
+    roll  = _ypr[2];
 }

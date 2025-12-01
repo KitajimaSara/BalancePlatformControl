@@ -4,6 +4,7 @@
 extern WireControl wireCtrl;
 extern BleComm ble;
 
+volatile bool gTensionStreamEnabled = false;   // ★ 新增
 const uint8_t TensionSensor::CMD_READ[8] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
 const uint8_t TensionSensor::CMD_WRITE_AVAILABLE[8] = {0x01, 0x06, 0x00, 0x17, 0x00, 0x01, 0xF8, 0x0E};
 const uint8_t TensionSensor::CMD_TARE_ON[8] = {0x01, 0x06, 0x00, 0x15, 0x00, 0x01, 0x59, 0xCE};
@@ -117,6 +118,13 @@ void TensionSensor::loop() {
             lastT = nowT;
             gWinchBaseForceN = f;                         // 更新参考
         }
+    }
+    if (gTensionStreamEnabled) {
+        char buf[64];
+        snprintf(buf, sizeof(buf),
+                 "TS,%lu,%.4f",
+                 (unsigned long)millis(), f);
+        ble.send(buf);
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);                 // 原 10 Hz
 }

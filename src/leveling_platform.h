@@ -5,6 +5,7 @@
 #include <ESP32Servo.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+extern volatile bool gAngleStreamEnabled;
 
 class LevelingPlatform {
 public:
@@ -18,6 +19,9 @@ public:
                 float kpRoll,  float kiRoll,  float kdRoll);
 
     void loop();                  // 周期性控制（50 Hz）
+
+    // ★ 新增：获取当前 YPR（单位：度）
+    void getYPR(float &yaw, float &pitch, float &roll) const;
 
 private:
     /* ---------- 硬件映射 ---------- */

@@ -2,6 +2,7 @@
 #define TENSION_SENSOR_H
 
 #include <Arduino.h>
+extern volatile bool gTensionStreamEnabled;
 
 class TensionSensor {
 public:
