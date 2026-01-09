@@ -22,11 +22,14 @@ public:
 
     // ★ 新增：获取当前 YPR（单位：度）
     void getYPR(float &yaw, float &pitch, float &roll) const;
+    void getBottomYPR(float &yaw, float &pitch, float &roll) const;
 
 private:
     /* ---------- 硬件映射 ---------- */
     static const int I2C_SDA = 18;
     static const int I2C_SCL = 17;
+    static const int I2C_BOTTOM_SDA = 4;   // ★ 新增
+    static const int I2C_BOTTOM_SCL = 5;   // ★ 新增
     static const int SERVO1_PIN = 9;
     static const int SERVO2_PIN = 10;
     static const int SERVO1_FEEDBACK_PIN = 14;
@@ -58,12 +61,15 @@ private:
 
     /* ---------- 设备对象 ---------- */
     MPU6050 _mpu;
+    MPU6050 _mpuBottom;
     Servo   _servo1, _servo2;
 
     uint8_t      _fifoBuf[64];
-    Quaternion   _q;
-    VectorFloat  _gravity;
+    uint8_t     _fifoBufBottom[64];
+    Quaternion   _q, _qBottom;
+    VectorFloat  _gravity, _gravityBottom;
     float        _ypr[3];
+    float        _yprBottom[3];
 
     /* ---------- 工具函数 ---------- */
     float readFeedbackAngle(int pin);     // 把 0‑4095 ADC → 0‑360°

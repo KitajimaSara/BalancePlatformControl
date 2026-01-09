@@ -11,6 +11,11 @@ void LevelingPlatform::begin() {
     _mpu.dmpInitialize();
     _mpu.setDMPEnabled(true);
 
+    Wire1.begin(I2C_BOTTOM_SDA, I2C_BOTTOM_SCL, 400000);
+    _mpuBottom.initialize();
+    _mpuBottom.dmpInitialize();
+    _mpuBottom.setDMPEnabled(true);
+
     pinMode(SERVO1_FEEDBACK_PIN, INPUT);
     pinMode(SERVO2_FEEDBACK_PIN, INPUT);
 
@@ -66,19 +71,27 @@ void LevelingPlatform::loop() {
         for (float& v : _ypr)
             v *= 180.0f / M_PI;
     }
+    if (_mpuBottom.dmpGetCurrentFIFOPacket(_fifoBufBottom)) {
+        _mpuBottom.dmpGetQuaternion(&_qBottom, _fifoBufBottom);
+        _mpuBottom.dmpGetGravity(&_gravityBottom, &_qBottom);
+        _mpuBottom.dmpGetYawPitchRoll(_yprBottom, &_qBottom, &_gravityBottom);
+        for (float &v : _yprBottom) v *= 180.0f / M_PI;
+    }
     float pitch = _ypr[1];
     float roll = _ypr[2];
 
     // ★★★ 新增：如果开启了角度流，就通过 BLE 发一行
     if (gAngleStreamEnabled) {
-        float yaw, pitch, roll;
+        float yaw, pitch, roll, yawBottom, pitchBottom, rollBottom;
         getYPR(yaw, pitch, roll);
+        getBottomYPR(yawBottom, pitchBottom, rollBottom);
 
-        char buf[96];
+        char buf[160];
         snprintf(buf, sizeof(buf),
-                 "YPR,%lu,%.3f,%.3f,%.3f",
+                 "YPR,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                  (unsigned long)millis(),
-                 yaw, pitch, roll);
+                 yaw, pitch, roll,
+                 yawBottom, pitchBottom, rollBottom);
         ble.send(buf);
     }
 
@@ -164,4 +177,10 @@ void LevelingPlatform::getYPR(float &yaw, float &pitch, float &roll) const {
     yaw   = _ypr[0];
     pitch = _ypr[1];
     roll  = _ypr[2];
+}
+
+void LevelingPlatform::getBottomYPR(float &yaw, float &pitch, float &roll) const {
+    yaw   = _yprBottom[0];
+    pitch = _yprBottom[1];
+    roll  = _yprBottom[2];
 }
