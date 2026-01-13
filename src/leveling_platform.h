@@ -60,8 +60,8 @@ private:
     unsigned long _prevRollMicros  = 0;
 
     /* ---------- 设备对象 ---------- */
-    MPU6050 _mpu;
-    MPU6050 _mpuBottom;
+    MPU6050 _mpu{MPU6050_DEFAULT_ADDRESS, &Wire};
+    MPU6050 _mpuBottom{MPU6050_DEFAULT_ADDRESS, &Wire1};
     Servo   _servo1, _servo2;
 
     uint8_t      _fifoBuf[64];
